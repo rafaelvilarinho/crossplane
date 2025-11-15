@@ -169,6 +169,9 @@ type Package interface { //nolint:interfacebloat // TODO(negz): Could we break t
 
 	GetResolvedSource() string
 	SetResolvedSource(s string)
+
+	GetExcludedResources() []ResourceSelector
+	SetExcludedResources([]ResourceSelector)
 }
 
 // GetCondition of this Provider.

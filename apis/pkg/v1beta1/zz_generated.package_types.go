@@ -78,6 +78,28 @@ type PackageSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	// +optional
 	CommonLabels map[string]string `json:"commonLabels,omitempty"`
+
+	// ExcludedResources specifies which resources NOT must be installed
+	// +optional
+	ExcludedResources []ResourceSelector `json:"excludedResources,omitempty"`
+}
+
+// ResourceSelector define a selector for package resources
+type ResourceSelector struct {
+	// Resource Type (ex: "CustomResourceDefinition", "Deployment")
+	// If not specified, assumes "CustomResourceDefinition"
+	// +optional
+	// +kubebuilder:default=CustomResourceDefinition
+	Kind string `json:"kind,omitempty"`
+
+	// Resource Name, with wildcards support
+	// For CRDs, put the full name like "instances.ec2.aws.upbound.io"
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
+	// API Group (optional, used for additional filters)
+	// +optional
+	Group string `json:"group,omitempty"`
 }
 
 // PackageStatus represents the observed state of a Package.

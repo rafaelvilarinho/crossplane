@@ -47,6 +47,16 @@ type Configuration struct {
 	Status ConfigurationStatus `json:"status,omitempty"`
 }
 
+// GetExcludedResources retorna os recursos excluídos
+func (c *Configuration) GetExcludedResources() []ResourceSelector {
+	return c.Spec.ExcludedResources
+}
+
+// SetExcludedResources define os recursos excluídos
+func (c *Configuration) SetExcludedResources(s []ResourceSelector) {
+	c.Spec.ExcludedResources = s
+}
+
 // ConfigurationSpec specifies details about a request to install a
 // configuration to Crossplane.
 type ConfigurationSpec struct {

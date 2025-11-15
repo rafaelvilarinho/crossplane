@@ -71,6 +71,31 @@ spec:
                   and services.
                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                 type: object
+              excludedResources:
+                description: ExcludedResources specifies which resources NOT must
+                  be installed
+                items:
+                  description: ResourceSelector define a selector for package resources
+                  properties:
+                    group:
+                      description: API Group (optional, used for additional filters)
+                      type: string
+                    kind:
+                      default: CustomResourceDefinition
+                      description: |-
+                        Resource Type (ex: "CustomResourceDefinition", "Deployment")
+                        If not specified, assumes "CustomResourceDefinition"
+                      type: string
+                    name:
+                      description: |-
+                        Resource Name, with wildcards support
+                        For CRDs, put the full name like "instances.ec2.aws.upbound.io"
+                      minLength: 1
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               ignoreCrossplaneConstraints:
                 default: false
                 description: |-

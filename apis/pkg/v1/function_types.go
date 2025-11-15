@@ -46,6 +46,16 @@ type Function struct {
 	Status FunctionStatus `json:"status,omitempty"`
 }
 
+// GetExcludedResources retorna os recursos excluídos
+func (f *Function) GetExcludedResources() []ResourceSelector {
+	return f.Spec.ExcludedResources
+}
+
+// SetExcludedResources define os recursos excluídos
+func (f *Function) SetExcludedResources(s []ResourceSelector) {
+	f.Spec.ExcludedResources = s
+}
+
 // FunctionSpec specifies the configuration of a Function.
 type FunctionSpec struct {
 	PackageSpec `json:",inline"`

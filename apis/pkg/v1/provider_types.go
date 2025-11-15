@@ -118,3 +118,13 @@ type ProviderRevisionList struct {
 
 	Items []ProviderRevision `json:"items"`
 }
+
+// GetExcludedResources retorna os recursos excluídos
+func (p *Provider) GetExcludedResources() []ResourceSelector {
+	return p.Spec.ExcludedResources
+}
+
+// SetExcludedResources define os recursos excluídos
+func (p *Provider) SetExcludedResources(s []ResourceSelector) {
+	p.Spec.ExcludedResources = s
+}

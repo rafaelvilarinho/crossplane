@@ -27,6 +27,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -876,6 +877,35 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reco
 	}
 
 	objects := pkg.GetObjects()
+
+	if parent := r.getParentPackage(ctx, pr); parent != nil {
+		filter := NewResourceFilter(
+			parent.GetExcludedResources(),
+			log,
+		)
+
+		originalCount := len(objects)
+		objects = filter.Filter(objects)
+		filteredCount := len(objects)
+
+		log.Debug("Filtered package resources",
+			"original", originalCount,
+			"filtered", filteredCount,
+			"removed", originalCount-filteredCount,
+		)
+
+		if originalCount != filteredCount {
+			log.Info("Filtered package resources",
+				"original", originalCount,
+				"filtered", filteredCount,
+				"removed", originalCount-filteredCount,
+			)
+
+			r.record.Event(pr, event.Normal(reasonSync,
+				fmt.Sprintf("Filtered %d of %d resources based on includedResources/excludedResources", originalCount-filteredCount, originalCount)))
+		}
+	}
+
 	// The CustomToManagedResourceConversion feature selectively converts CRDs
 	// to MRDs from a provider package. Only managed resource CRDs are converted;
 	// provider configuration CRDs (ProviderConfig, etc.) remain as regular CRDs.
@@ -934,6 +964,33 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reco
 	status.MarkConditions(v1.RevisionHealthy())
 
 	return reconcile.Result{Requeue: false}, errors.Wrap(r.client.Status().Update(ctx, pr), errUpdateStatus)
+}
+
+func (r *Reconciler) getParentPackage(ctx context.Context, pr v1.PackageRevision) v1.Package {
+	parentName, found := pr.GetLabels()[v1.LabelParentPackage]
+	if !found {
+		return nil
+	}
+
+	// Detecta o tipo do pacote baseado no tipo da revision
+	var parent v1.Package
+	switch pr.(type) {
+	case *v1.ProviderRevision:
+		parent = &v1.Provider{}
+	case *v1.ConfigurationRevision:
+		parent = &v1.Configuration{}
+	case *v1.FunctionRevision:
+		parent = &v1.Function{}
+	default:
+		return nil
+	}
+
+	if err := r.client.Get(ctx, types.NamespacedName{Name: parentName}, parent); err != nil {
+		r.log.Debug("Could not get parent package", "error", err)
+		return nil
+	}
+
+	return parent
 }
 
 func (r *Reconciler) deactivateRevision(ctx context.Context, pr v1.PackageRevision) error {
